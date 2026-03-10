@@ -30,5 +30,12 @@ models/
 .DS_Store
 Thumbs.db
 
-cs229-2018-autumn
+# IDE
+.vscode/
+.idea/
+
+# External repos
+cs229-2018-autumn/
+
+# Custom
 da.py
