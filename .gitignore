@@ -33,6 +33,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# VS Code workspace
+*.code-workspace
 
 # External repos
 cs229-2018-autumn/
