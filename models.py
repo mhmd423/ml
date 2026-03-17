@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Model(ABC):
@@ -41,11 +42,11 @@ class LogisticRegression(Model):
         if fit_intercept:
             X = self.add_intercept(X)
 
-        y = y.flatten()  # Ensure y is a 1D array
+        y = y.reshape(-1, 1)  # Ensure y is a column vector
         m, n = X.shape
         eps = 1e-5
 
-        self.theta = np.zeros(n)
+        self.theta = np.zeros((n, 1))
 
         if method == "gradient_descent":
             for _ in range(num_iterations):
@@ -75,10 +76,12 @@ class LogisticRegression(Model):
         if not has_intercept:
             X = self.add_intercept(X)
 
-        m ,n = X.shape
-        if self.theta.shape != n :
-            raise ValueError(f"Expected input with {self.theta.shape[0]} features, got {n}")
-        
+        m, n = X.shape
+        if self.theta.shape[0] != n:
+            raise ValueError(
+                f"Expected input with {self.theta.shape[0]} features, got {n}"
+            )
+
         if output == "probability":
             return 1 / (1 + np.exp(-X @ self.theta))
         elif output == "binary":
@@ -87,5 +90,53 @@ class LogisticRegression(Model):
         else:
             raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
 
-    def visualize(self, X, y):
-        pass
+    def visualize(self, X, y_true, levels=1):
+        m, n = X.shape
+        y_true = y_true.flatten()  # Ensure y_true is a 1D array
+        if n != 2:
+            raise ValueError("Visualization only supported for 2D data")
+
+        x1_min, x1_max = X[:, 0].min(), X[:, 0].max()
+        x2_min, x2_max = X[:, 1].min(), X[:, 1].max()
+
+        xx1, xx2 = np.meshgrid(
+            np.linspace(x1_min, x1_max, 100), np.linspace(x2_min, x2_max, 100)
+        )
+        grid = np.c_[xx1.ravel(), xx2.ravel()]
+
+        z = self.predict(grid, output="probability").reshape(xx1.shape)
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        # making the colored background using contourf
+        ax.contourf(xx1, xx2, z, levels=levels, cmap="RdBu", alpha=0.6)
+        ax.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidth=2)
+
+        # plotting the original data points
+        x_true = X[y_true == 1]
+        ax.scatter(
+            x_true[:, 0],
+            x_true[:, 1],
+            c="b",
+            label="class 1",
+            s=60,
+            marker="o",
+            zorder=3,
+        )
+
+        x_false = X[y_true == 0]
+        ax.scatter(
+            x_false[:, 0],
+            x_false[:, 1],
+            c="r",
+            label="class 0",
+            s=60,
+            marker="x",
+            zorder=3,
+        )
+
+        ax.set_title("Logistic Regression")
+        ax.legend(loc="upper right")
+        ax.grid(True, linestyle="--", alpha=0.4)
+        plt.tight_layout()
+        plt.show()
