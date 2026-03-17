@@ -79,9 +79,9 @@ class LogisticRegression(Model):
         if self.theta.shape != n :
             raise ValueError(f"Expected input with {self.theta.shape[0]} features, got {n}")
         
-        if output == "binary":
+        if output == "probability":
             return 1 / (1 + np.exp(-X @ self.theta))
-        elif output == "probability":
+        elif output == "binary":
             prob = 1 / (1 + np.exp(-X @ self.theta))
             return (prob >= 0.5).astype(int)
         else:
