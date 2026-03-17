@@ -21,7 +21,7 @@ class Model(ABC):
 
 
 class LogisticRegression(Model):
-    methods = ["gradient_descent", "newton_method", "stochastic_gradient_descent"]
+    methods = ["gradient_descent", "newton_method"]
 
     def __init__(self):
         self.theta = None
@@ -68,19 +68,24 @@ class LogisticRegression(Model):
                 if np.linalg.norm(gradient) < eps:
                     break
 
-        elif method == "stochastic_gradient_descent":
-            for _ in range(num_iterations):
-                for i in range(m):
-                    z = np.dot(X[i], self.theta)
-                    hyp = 1 / (1 + np.exp(-z))
-                    gradient = X[i] * (hyp - y[i])
-                    self.theta -= learning_rate * gradient
+    def predict(self, X, has_intercept=False, output="binary"):
+        if self.theta is None:
+            raise Exception("Model not trained yet")
 
-                if np.linalg.norm(gradient) < eps:
-                    break
+        if not has_intercept:
+            X = self.add_intercept(X)
 
-    def predict(self, X):
-        pass
+        m ,n = X.shape
+        if self.theta.shape != n :
+            raise ValueError(f"Expected input with {self.theta.shape[0]} features, got {n}")
+        
+        if output == "binary":
+            return 1 / (1 + np.exp(-X @ self.theta))
+        elif output == "probability":
+            prob = 1 / (1 + np.exp(-X @ self.theta))
+            return (prob >= 0.5).astype(int)
+        else:
+            raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
 
     def visualize(self, X, y):
         pass
