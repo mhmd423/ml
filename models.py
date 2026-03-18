@@ -4,9 +4,16 @@ import matplotlib.pyplot as plt
 
 
 class Model(ABC):
+    def __init__(self):
+        self.mu = None
+        self.sigma = None
+        
     def add_intercept(self, X):
         intercept = np.ones((X.shape[0], 1))
         return np.hstack((intercept, X))
+
+    def normalize(self, X):
+        return (X - self.mu) / self.sigma
 
     @abstractmethod
     def predict(self, input_data):
@@ -25,6 +32,7 @@ class LogisticRegression(Model):
     methods = ["gradient_descent", "newton_method"]
 
     def __init__(self):
+        super().__init__()
         self.theta = None
 
     def fit(
@@ -35,10 +43,16 @@ class LogisticRegression(Model):
         method="gradient_descent",
         learning_rate=0.01,
         num_iterations=1000,
+        normalize=False,
     ):
         if method not in self.methods:
             raise ValueError(f"Method must be one of {self.methods}")
 
+        self.mu = X.mean(axis=0)
+        self.sigma = X.std(axis=0)
+        if normalize:
+            X = self.normalize(X)
+            
         if fit_intercept:
             X = self.add_intercept(X)
 
@@ -69,9 +83,12 @@ class LogisticRegression(Model):
                 if np.linalg.norm(gradient) < eps:
                     break
 
-    def predict(self, X, has_intercept=False, output="binary"):
+    def predict(self, X, has_intercept=False, output="binary", normalize=False):
         if self.theta is None:
             raise Exception("Model not trained yet")
+        
+        if normalize:
+            X = self.normalize(X)
 
         if not has_intercept:
             X = self.add_intercept(X)
@@ -90,7 +107,7 @@ class LogisticRegression(Model):
         else:
             raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
 
-    def visualize(self, X, y_true, levels=1):
+    def visualize(self, X, y_true, levels=1,normalize=False):
         m, n = X.shape
         y_true = y_true.flatten()  # Ensure y_true is a 1D array
         if n != 2:
@@ -104,13 +121,13 @@ class LogisticRegression(Model):
         )
         grid = np.c_[xx1.ravel(), xx2.ravel()]
 
-        z = self.predict(grid, output="probability").reshape(xx1.shape)
+        z = self.predict(grid, output="probability", normalize=normalize).reshape(xx1.shape)
 
         fig, ax = plt.subplots(figsize=(8, 8))
 
         # making the colored background using contourf
         ax.contourf(xx1, xx2, z, levels=levels, cmap="RdBu", alpha=0.6)
-        ax.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidth=2)
+        ax.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidths=2)
 
         # plotting the original data points
         x_true = X[y_true == 1]
