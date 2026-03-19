@@ -125,7 +125,12 @@ class LogisticRegression(Model):
         else:
             raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
 
-    def visualize(self, X, y_true, levels=1,normalize=False):
+    def visualize(
+        self,
+        X,
+        y_true,
+        contour_levels=1,
+    ):
         m, n = X.shape
         y_true = y_true.flatten()  # Ensure y_true is a 1D array
         if n != 2:
@@ -139,17 +144,22 @@ class LogisticRegression(Model):
         )
         grid = np.c_[xx1.ravel(), xx2.ravel()]
 
-        z = self.predict(grid, output="probability", normalize=normalize).reshape(xx1.shape)
+        z = self.predict(
+            grid,
+            output="probability",
+        ).reshape(xx1.shape)
 
-        fig, ax = plt.subplots(figsize=(8, 8))
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
+        # ------------------- plot 1 -------------------
+        ax1 = axes[0]
         # making the colored background using contourf
-        ax.contourf(xx1, xx2, z, levels=levels, cmap="RdBu", alpha=0.6)
-        ax.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidths=2)
+        ax1.contourf(xx1, xx2, z, levels=contour_levels, cmap="RdBu", alpha=0.6)
+        ax1.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidths=2)
 
         # plotting the original data points
         x_true = X[y_true == 1]
-        ax.scatter(
+        ax1.scatter(
             x_true[:, 0],
             x_true[:, 1],
             c="b",
@@ -160,7 +170,7 @@ class LogisticRegression(Model):
         )
 
         x_false = X[y_true == 0]
-        ax.scatter(
+        ax1.scatter(
             x_false[:, 0],
             x_false[:, 1],
             c="r",
@@ -170,8 +180,32 @@ class LogisticRegression(Model):
             zorder=3,
         )
 
-        ax.set_title("Logistic Regression")
-        ax.legend(loc="upper right")
-        ax.grid(True, linestyle="--", alpha=0.4)
+        ax1.set_title("Decision Boundary", fontsize=13)
+        ax1.legend(loc="upper right")
+        ax1.grid(True, linestyle="--", alpha=0.4)
+
+        # -------------------- plot 2 -------------------
+        ax2 = axes[1]
+        if self.loss:
+            ax2.plot(self.loss, color="steelblue", linewidth=2)
+            ax2.set_xlabel("Iteration")
+            ax2.set_ylabel("Binary Cross-Entropy Loss")
+            ax2.set_title("Training Loss", fontsize=13)
+            ax2.grid(True, linestyle="--", alpha=0.4)
+        else:
+            ax2.text(
+                0.5,
+                0.5,
+                "No loss history",
+                ha="center",
+                va="center",
+                transform=ax2.transAxes,
+                fontsize=12,
+                color="grey",
+            )
+
+        plt.suptitle(
+            f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
+        )
         plt.tight_layout()
         plt.show()
