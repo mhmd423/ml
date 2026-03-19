@@ -67,7 +67,7 @@ class LogisticRegression(Model):
         learning_rate=0.01,
         num_iterations=1000,
         normalize=False,
-        eps = 1e-5,
+        eps=1e-5,
     ):
         if method not in self.METHODS:
             raise ValueError(f"Method must be one of {self.METHODS}")
@@ -78,6 +78,7 @@ class LogisticRegression(Model):
         self._add_intercept = fit_intercept
         self._normalize = normalize
         self.method = method
+        self.loss = []
 
         X_processed = self.preprocess(X)
 
@@ -129,9 +130,9 @@ class LogisticRegression(Model):
             )
 
         if output == "probability":
-            return 1 / (1 + np.exp(-X_processed @ self.theta))
+            return self.sigmoid(X_processed @ self.theta)
         elif output == "binary":
-            prob = 1 / (1 + np.exp(-X_processed @ self.theta))
+            prob = self.sigmoid(X_processed @ self.theta)
             return (prob >= 0.5).astype(int)
         else:
             raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
@@ -216,13 +217,15 @@ class LogisticRegression(Model):
             )
 
         ax2.text(
-            0.95, 0.95,
+            0.95,
+            0.95,
             f"last-error: {self.loss[-1]}",
             transform=ax2.transAxes,
             fontsize=10,
-            color='red',
-            ha='right',
-            va='top'
+            color="white",
+            ha="right",
+            va="top",
+            bbox=dict(facecolor="black", alpha=1, edgecolor="none"),
         )
         plt.suptitle(
             f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
