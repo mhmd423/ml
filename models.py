@@ -7,13 +7,23 @@ class Model(ABC):
     def __init__(self):
         self.mu = None
         self.sigma = None
+        self.add_intercept = True
+        self.normalize = False
+        self.loss = []
         
     def add_intercept(self, X):
         intercept = np.ones((X.shape[0], 1))
         return np.hstack((intercept, X))
 
     def normalize(self, X):
-        return (X - self.mu) / self.sigma
+        return (X - self.mu) / (self.sigma + 1e-8)  # Add a small epsilon to avoid division by zero
+    
+    def preprocess(self, X):        # for preprocessing the data before training or prediction
+        if self.add_intercept:
+            X = self.add_intercept(X)
+        if self.normalize:
+            X = self.normalize(X)
+        return X
 
     @abstractmethod
     def predict(self, input_data):
@@ -29,7 +39,7 @@ class Model(ABC):
 
 
 class LogisticRegression(Model):
-    methods = ["gradient_descent", "newton_method"]
+    METHODS = ["gradient_descent", "newton_method"]
 
     def __init__(self):
         super().__init__()
@@ -45,8 +55,8 @@ class LogisticRegression(Model):
         num_iterations=1000,
         normalize=False,
     ):
-        if method not in self.methods:
-            raise ValueError(f"Method must be one of {self.methods}")
+        if method not in self.METHODS:
+            raise ValueError(f"Method must be one of {self.METHODS}")
 
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
