@@ -67,6 +67,7 @@ class LogisticRegression(Model):
         learning_rate=0.01,
         num_iterations=1000,
         normalize=False,
+        eps = 1e-5,
     ):
         if method not in self.METHODS:
             raise ValueError(f"Method must be one of {self.METHODS}")
@@ -82,7 +83,7 @@ class LogisticRegression(Model):
 
         y = y.reshape(-1, 1)  # Ensure y is a column vector
         m, n = X_processed.shape
-        eps = 1e-5
+        eps = eps
 
         self.theta = np.zeros((n, 1))
 
@@ -214,6 +215,15 @@ class LogisticRegression(Model):
                 color="grey",
             )
 
+        ax2.text(
+            0.95, 0.95,
+            f"last-error: {self.loss[-1]}",
+            transform=ax2.transAxes,
+            fontsize=10,
+            color='red',
+            ha='right',
+            va='top'
+        )
         plt.suptitle(
             f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
         )
