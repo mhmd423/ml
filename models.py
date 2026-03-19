@@ -18,11 +18,11 @@ class Model(ABC):
     def normalize(self, X):
         return (X - self.mu) / (self.sigma + 1e-8)  # Add a small epsilon to avoid division by zero
     
-    def preprocess(self, X):        # for preprocessing the data before training or prediction
-        if self.add_intercept:
-            X = self.add_intercept(X)
+    def preprocess(self, X):  
         if self.normalize:
             X = self.normalize(X)
+        if self.add_intercept:
+            X = self.add_intercept(X)
         return X
 
     @abstractmethod
@@ -67,13 +67,14 @@ class LogisticRegression(Model):
         if method not in self.METHODS:
             raise ValueError(f"Method must be one of {self.METHODS}")
 
+        # adding flags for use again in other methods
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
-        if normalize:
-            X = self.normalize(X)
-            
-        if fit_intercept:
-            X = self.add_intercept(X)
+        self.add_intercept = fit_intercept
+        self.normalize = normalize
+        
+        X_processed = self.preprocess(X)
+        
 
         y = y.reshape(-1, 1)  # Ensure y is a column vector
         m, n = X.shape
@@ -84,9 +85,10 @@ class LogisticRegression(Model):
         if method == "gradient_descent":
             for _ in range(num_iterations):
                 z = np.dot(X, self.theta)
-                hyp = 1 / (1 + np.exp(-z))
-                gradient = np.dot(X.T, (hyp - y)) / m
+                hyp = self.sigmoid(z)
+                gradient = np.dot(X_processed.T, (hyp - y)) / m
                 self.theta -= learning_rate * gradient
+                self.loss.append(self.BCE_loss(hyp, y))
 
                 if np.linalg.norm(gradient) < eps:
                     break
@@ -94,34 +96,31 @@ class LogisticRegression(Model):
         elif method == "newton_method":
             for _ in range(num_iterations):
                 z = np.dot(X, self.theta)
-                hyp = 1 / (1 + np.exp(-z))
-                gradient = np.dot(X.T, (hyp - y)) / m
-                H = np.dot(X.T, X * (hyp * (1 - hyp))) / m
+                hyp = self.sigmoid(z)
+                gradient = np.dot(X_processed.T, (hyp - y)) / m
+                H = np.dot(X_processed.T, X_processed * (hyp * (1 - hyp))) / m
                 self.theta -= np.linalg.solve(H, gradient)
+                self.loss.append(self.BCE_loss(hyp, y))
 
                 if np.linalg.norm(gradient) < eps:
                     break
 
-    def predict(self, X, has_intercept=False, output="binary", normalize=False):
+    def predict(self, X, output="binary",):
         if self.theta is None:
             raise Exception("Model not trained yet")
         
-        if normalize:
-            X = self.normalize(X)
+        X_processed = self.preprocess(X)
 
-        if not has_intercept:
-            X = self.add_intercept(X)
-
-        m, n = X.shape
+        m, n = X_processed.shape
         if self.theta.shape[0] != n:
             raise ValueError(
                 f"Expected input with {self.theta.shape[0]} features, got {n}"
             )
 
         if output == "probability":
-            return 1 / (1 + np.exp(-X @ self.theta))
+            return 1 / (1 + np.exp(-X_processed @ self.theta))
         elif output == "binary":
-            prob = 1 / (1 + np.exp(-X @ self.theta))
+            prob = 1 / (1 + np.exp(-X_processed @ self.theta))
             return (prob >= 0.5).astype(int)
         else:
             raise ValueError(f"Output must be 'binary' or 'probability', got {output}")
