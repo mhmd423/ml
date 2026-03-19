@@ -7,21 +7,23 @@ class Model(ABC):
     def __init__(self):
         self.mu = None
         self.sigma = None
-        self.add_intercept = True
-        self.normalize = False
+        self._add_intercept = True
+        self._normalize = False
         self.loss = []
-        
+
     def add_intercept(self, X):
         intercept = np.ones((X.shape[0], 1))
         return np.hstack((intercept, X))
 
     def normalize(self, X):
-        return (X - self.mu) / (self.sigma + 1e-8)  # Add a small epsilon to avoid division by zero
-    
-    def preprocess(self, X):  
-        if self.normalize:
+        return (X - self.mu) / (
+            self.sigma + 1e-8
+        )  # Add a small epsilon to avoid division by zero
+
+    def preprocess(self, X):
+        if self._normalize:
             X = self.normalize(X)
-        if self.add_intercept:
+        if self._add_intercept:
             X = self.add_intercept(X)
         return X
 
@@ -44,11 +46,13 @@ class LogisticRegression(Model):
     def __init__(self):
         super().__init__()
         self.theta = None
-        
+        self.method = None
+
     @staticmethod
     def sigmoid(z):
         return 1 / (1 + np.exp(-z))
-    
+
+    @staticmethod
     def BCE_loss(hyp, y_true):
         eps = 1e-12
         hyp = np.clip(hyp, eps, 1 - eps)  # Avoid log(0)
@@ -70,21 +74,21 @@ class LogisticRegression(Model):
         # adding flags for use again in other methods
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
-        self.add_intercept = fit_intercept
-        self.normalize = normalize
-        
+        self._add_intercept = fit_intercept
+        self._normalize = normalize
+        self.method = method
+
         X_processed = self.preprocess(X)
-        
 
         y = y.reshape(-1, 1)  # Ensure y is a column vector
-        m, n = X.shape
+        m, n = X_processed.shape
         eps = 1e-5
 
         self.theta = np.zeros((n, 1))
 
         if method == "gradient_descent":
             for _ in range(num_iterations):
-                z = np.dot(X, self.theta)
+                z = np.dot(X_processed, self.theta)
                 hyp = self.sigmoid(z)
                 gradient = np.dot(X_processed.T, (hyp - y)) / m
                 self.theta -= learning_rate * gradient
@@ -95,7 +99,7 @@ class LogisticRegression(Model):
 
         elif method == "newton_method":
             for _ in range(num_iterations):
-                z = np.dot(X, self.theta)
+                z = np.dot(X_processed, self.theta)
                 hyp = self.sigmoid(z)
                 gradient = np.dot(X_processed.T, (hyp - y)) / m
                 H = np.dot(X_processed.T, X_processed * (hyp * (1 - hyp))) / m
@@ -105,10 +109,16 @@ class LogisticRegression(Model):
                 if np.linalg.norm(gradient) < eps:
                     break
 
-    def predict(self, X, output="binary",):
+        return self
+
+    def predict(
+        self,
+        X,
+        output="binary",
+    ):
         if self.theta is None:
             raise Exception("Model not trained yet")
-        
+
         X_processed = self.preprocess(X)
 
         m, n = X_processed.shape
