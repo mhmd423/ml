@@ -44,6 +44,15 @@ class LogisticRegression(Model):
     def __init__(self):
         super().__init__()
         self.theta = None
+        
+    @staticmethod
+    def sigmoid(z):
+        return 1 / (1 + np.exp(-z))
+    
+    def BCE_loss(hyp, y_true):
+        eps = 1e-12
+        hyp = np.clip(hyp, eps, 1 - eps)  # Avoid log(0)
+        return -np.mean(y_true * np.log(hyp) + (1 - y_true) * np.log(1 - hyp))
 
     def fit(
         self,
