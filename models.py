@@ -9,6 +9,7 @@ class Model(ABC):
         self.sigma = None
         self._add_intercept = True
         self._normalize = False
+        self.method = None
         self.loss = []
 
     def add_intercept(self, X):
@@ -46,7 +47,6 @@ class LogisticRegression(Model):
     def __init__(self):
         super().__init__()
         self.theta = None
-        self.method = None
 
     @staticmethod
     def sigmoid(z):
@@ -232,3 +232,49 @@ class LogisticRegression(Model):
         )
         plt.tight_layout()
         plt.show()
+
+
+class LinearRegression(Model):
+    METHODS = ["normal_equation", "gradient_descent",]  # one iteration of netwon method is equivalent to normal equation
+    def __init__(self):
+        super().__init__()
+        self.theta = None
+
+    def fit(
+        self,
+        X,
+        y,
+        normalize=False,
+        add_intercept=True,
+        method="normal_equation",
+        ):
+        
+        self._normalize = normalize
+        self._add_intercept = add_intercept
+        self.mu = X.mean(axis=0)
+        self.sigma = X.std(axis=0)
+        self.method = method
+        
+        X_processed = self.preprocess(X)
+        y = y.reshape(-1, 1)  # Ensure y is a column vector
+        
+        m, n = X_processed.shape
+        self.theta = np.zeros((n, 1))
+        
+        if method == "normal_equation":
+            self.theta = np.linalg.pinv(X_processed.T @ X_processed) @ X_processed.T @ y
+        elif method == "gradient_descent":
+            learning_rate = 0.01
+            num_iterations = 1000
+            eps = 1e-5
+
+            for _ in range(num_iterations):
+                hyp = X_processed @ self.theta
+                gradient = (X_processed.T @ (hyp - y)) / m
+                self.theta -= learning_rate * gradient
+
+                if np.linalg.norm(gradient) < eps:
+                    break
+        else:
+            raise ValueError(f"Method must be one of {self.METHODS}")
+        
