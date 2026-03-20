@@ -9,6 +9,7 @@ class Model(ABC):
         self.sigma = None
         self._add_intercept = True
         self._normalize = False
+        self.method = None
         self.loss = []
 
     def add_intercept(self, X):
@@ -46,7 +47,6 @@ class LogisticRegression(Model):
     def __init__(self):
         super().__init__()
         self.theta = None
-        self.method = None
 
     @staticmethod
     def sigmoid(z):
@@ -232,5 +232,91 @@ class LogisticRegression(Model):
         )
         plt.tight_layout()
         plt.show()
+        return self
+
+
+class LinearRegression(Model):
+    METHODS = ["normal_equation", "gradient_descent",]  # one iteration of netwon method is equivalent to normal equation
+    def __init__(self):
+        super().__init__()
+        self.theta = None
+
+    def fit(
+        self,
+        X,
+        y,
+        normalize=False,
+        add_intercept=True,
+        method="normal_equation",
+        ):
+        
+        self._normalize = normalize
+        self._add_intercept = add_intercept
+        self.mu = X.mean(axis=0)
+        self.sigma = X.std(axis=0)
+        self.method = method
+        
+        X_processed = self.preprocess(X)
+        y = y.reshape(-1, 1)  # Ensure y is a column vector
+        
+        m, n = X_processed.shape
+        self.theta = np.zeros((n, 1))
+        
+        if method == "normal_equation":
+            self.theta = np.linalg.pinv(X_processed.T @ X_processed) @ X_processed.T @ y
+        elif method == "gradient_descent":
+            learning_rate = 0.01
+            num_iterations = 1000
+            eps = 1e-5
+
+            for _ in range(num_iterations):
+                hyp = X_processed @ self.theta
+                gradient = (X_processed.T @ (hyp - y)) / m
+                self.theta -= learning_rate * gradient
+
+                if np.linalg.norm(gradient) < eps:
+                    break
+        else:
+            raise ValueError(f"Method must be one of {self.METHODS}")
         
         return self
+    
+    def predict(self, X):
+        if self.theta is None:
+            raise Exception("Model not trained yet")
+
+        X_processed = self.preprocess(X)
+
+        m, n = X_processed.shape
+        if self.theta.shape[0] != n:
+            raise ValueError(
+                f"Expected input with {self.theta.shape[0]} features, got {n}"
+            )
+
+        return X_processed @ self.theta
+    
+    def visualize(self, X, y_true):
+        m , n = X.shape
+        y_true = y_true.flatten()  # Ensure y_true is a 1D array
+        
+        if n != 1:
+            raise ValueError("Visualization only supported for 1D data")
+        
+        x_min, x_max = X[:, 0].min(), X[:, 0].max()
+        x_plot = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
+        y_plot = self.predict(x_plot)
+        
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y_true, color='blue', label='Data Points', s=60, marker='o')
+        plt.plot(x_plot, y_plot, color='red', label='Regression Line', linewidth=2)
+        plt.title(f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold')
+        plt.xlabel("Feature")
+        plt.ylabel("Target")
+        plt.legend()
+        plt.grid(True, linestyle='--', alpha=0.4)
+        plt.show()
+        
+
+        
+        
+
