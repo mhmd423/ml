@@ -278,3 +278,19 @@ class LinearRegression(Model):
         else:
             raise ValueError(f"Method must be one of {self.METHODS}")
         
+        return self
+    
+    def predict(self, X):
+        if self.theta is None:
+            raise Exception("Model not trained yet")
+
+        X_processed = self.preprocess(X)
+
+        m, n = X_processed.shape
+        if self.theta.shape[0] != n:
+            raise ValueError(
+                f"Expected input with {self.theta.shape[0]} features, got {n}"
+            )
+
+        return X_processed @ self.theta
+        
