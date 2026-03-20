@@ -232,6 +232,7 @@ class LogisticRegression(Model):
         )
         plt.tight_layout()
         plt.show()
+        return self
 
 
 class LinearRegression(Model):
