@@ -293,4 +293,25 @@ class LinearRegression(Model):
             )
 
         return X_processed @ self.theta
+    
+    def visualize(self, X, y_true):
+        m , n = X.shape
+        y_true = y_true.flatten()  # Ensure y_true is a 1D array
+        
+        if n != 1:
+            raise ValueError("Visualization only supported for 1D data")
+        
+        x_min, x_max = X[:, 0].min(), X[:, 0].max()
+        x_plot = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
+        y_plot = self.predict(x_plot)
+        
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y_true, color='blue', label='Data Points', s=60, marker='o')
+        plt.plot(x_plot, y_plot, color='red', label='Regression Line', linewidth=2)
+        plt.title(f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold')
+        plt.xlabel("Feature")
+        plt.ylabel("Target")
+        plt.legend()
+        plt.grid(True, linestyle='--', alpha=0.4)
+        plt.show()
         
