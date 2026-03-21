@@ -8,7 +8,7 @@ class Model(ABC):
         self.mu = None
         self.sigma = None
         self._add_intercept = True
-        self._normalize = False
+        self._standarize = False
         self.method = None
         self.loss = []
 
@@ -16,14 +16,14 @@ class Model(ABC):
         intercept = np.ones((X.shape[0], 1))
         return np.hstack((intercept, X))
 
-    def normalize(self, X):
+    def standarize(self, X):
         return (X - self.mu) / (
             self.sigma + 1e-8
         )  # Add a small epsilon to avoid division by zero
 
     def preprocess(self, X):
-        if self._normalize:
-            X = self.normalize(X)
+        if self._standarize:
+            X = self.standarize(X)
         if self._add_intercept:
             X = self.add_intercept(X)
         return X
@@ -66,7 +66,7 @@ class LogisticRegression(Model):
         method="gradient_descent",
         learning_rate=0.01,
         num_iterations=1000,
-        normalize=False,
+        standarize=False,
         eps=1e-5,
     ):
         if method not in self.METHODS:
@@ -76,7 +76,7 @@ class LogisticRegression(Model):
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
         self._add_intercept = fit_intercept
-        self._normalize = normalize
+        self._normalize = standarize
         self.method = method
         self.loss = []
 
@@ -245,12 +245,12 @@ class LinearRegression(Model):
         self,
         X,
         y,
-        normalize=False,
+        standarize=False,
         add_intercept=True,
         method="normal_equation",
         ):
         
-        self._normalize = normalize
+        self._standarize = standarize
         self._add_intercept = add_intercept
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
