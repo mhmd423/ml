@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib.pyplot as plt
+import atexit                               # to pervent the windows from closing immediantely
+atexit.register(plt.show())
 
 
 class Model(ABC):
@@ -231,7 +233,7 @@ class LogisticRegression(Model):
             f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
         )
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
         return self
 
 
@@ -314,5 +316,5 @@ class LinearRegression(Model):
         plt.ylabel("Target")
         plt.legend()
         plt.grid(True, linestyle='--', alpha=0.4)
-        plt.show()
+        plt.show(block=False)
         
