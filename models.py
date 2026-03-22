@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib.pyplot as plt
-import atexit                               # to pervent the windows from closing immediantely
-atexit.register(plt.show())
 
 
 class Model(ABC):
@@ -233,8 +231,8 @@ class LogisticRegression(Model):
             f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
         )
         plt.tight_layout()
-        plt.show(block=False)
-        return self
+        
+        return fig
 
 
 class LinearRegression(Model):
@@ -308,13 +306,14 @@ class LinearRegression(Model):
         x_plot = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
         y_plot = self.predict(x_plot)
         
-        plt.figure(figsize=(10, 6))
-        plt.scatter(X, y_true, color='blue', label='Data Points', s=60, marker='o')
-        plt.plot(x_plot, y_plot, color='red', label='Regression Line', linewidth=2)
-        plt.title(f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold')
-        plt.xlabel("Feature")
-        plt.ylabel("Target")
-        plt.legend()
-        plt.grid(True, linestyle='--', alpha=0.4)
-        plt.show(block=False)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(X, y_true, color='blue', label='Data Points', s=60, marker='o')
+        ax.plot(x_plot, y_plot, color='red', label='Regression Line', linewidth=2)
+        ax.set_title(f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold')
+        ax.set_xlabel("Feature")
+        ax.set_ylabel("Target")
+        ax.legend()
+        ax.grid(True, linestyle='--', alpha=0.4)
+        
+        return fig 
         
