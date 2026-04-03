@@ -76,7 +76,7 @@ class LogisticRegression(Model):
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
         self._add_intercept = fit_intercept
-        self._normalize = standarize
+        self._standarize = standarize
         self.method = method
         self.loss = []
 
