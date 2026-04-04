@@ -317,3 +317,16 @@ class LinearRegression(Model):
         
         return fig 
         
+class GDA(Model):
+    def __init__(self):
+      pass
+  
+    def calcluate_paramaters(X, y):
+        m, n = X.shape
+        phi = np.mean(y)
+        mu_0 = X[y == 0].mean(axis=0)
+        mu_1 = X[y == 1].mean(axis=0)
+        sigma = ((X - mu_0).T @ (X - mu_0) + (X - mu_1).T @ (X - mu_1)) / m
+        return phi, mu_0, mu_1, sigma
+      
+    
