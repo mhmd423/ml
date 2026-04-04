@@ -319,14 +319,16 @@ class LinearRegression(Model):
         
 class GDA(Model):
     def __init__(self):
+        super().__init__()
         self.phi = None
         self.mu_0 = None
         self.mu_1 = None
-        self.sigma = None
-        self.sigma_inv = None
+        self.cov = None
+        self.cov_inv = None
         self.theta = None
         self.theta_0 = None
   
+    @staticmethod
     def calcluate_paramaters(X, y):
         m, n = X.shape
         X0 = X[y == 0]
@@ -335,22 +337,29 @@ class GDA(Model):
         mu_0 = X0.mean(axis=0)
         mu_1 = X1.mean(axis=0)
         
-        sigma = (
+        cov = (
         (X0 - mu_0).T @ (X0 - mu_0) +
         (X1 - mu_1).T @ (X1 - mu_1)
         ) / m
         
-        sigma_inv = np.linalg.inv(sigma)
-        return phi, mu_0, mu_1, sigma, sigma_inv
+        cov_inv = np.linalg.inv(cov)
+        return phi, mu_0, mu_1, cov, cov_inv
     
-    def fit(self, X, y,):
-        self.phi, self.mu_0, self.mu_1, self.sigma, self.sigma_inv = self.calcluate_paramaters(X, y)
+    def fit(self, X, y, standarize=False):
+        y = y.flatten()
+        self._standarize = standarize
+        self._add_intercept = False
+        self.mu = X.mean(axis=0)
+        self.sigma = X.std(axis=0)
+        X_processed = self.preprocess(X)
         
-        self.theta = self.sigma_inv @ (self.mu_1 - self.mu_0)
+        self.phi, self.mu_0, self.mu_1, self.cov, self.cov_inv = self.calcluate_paramaters(X_processed, y)
+        
+        self.theta = self.cov_inv @ (self.mu_1 - self.mu_0)
         
         self.theta_0 = (
-            -0.5 * self.mu_1.T @ self.sigma_inv @ self.mu_1
-            + 0.5 * self.mu_0.T @ self.sigma_inv @ self.mu_0
+            -0.5 * self.mu_1.T @ self.cov_inv @ self.mu_1
+            + 0.5 * self.mu_0.T @ self.cov_inv @ self.mu_0
             + np.log(self.phi / (1 - self.phi))
         )
         return self
@@ -358,8 +367,10 @@ class GDA(Model):
     def predict(self, X, output="binary"):
         if self.phi is None:
             raise Exception("Model not trained yet")
+
+        X_processed = self.preprocess(X)
         
-        z = X @ self.theta + self.theta_0
+        z = X_processed @ self.theta + self.theta_0
 
         if output == "probability":
             # Return the probability of the positive class
@@ -420,7 +431,7 @@ class GDA(Model):
         # -------------------- plot 2 -------------------
         ax2 = axes[1]
         ax2.axis("off")
-        sigma_det = np.linalg.det(self.sigma) if self.sigma is not None else np.nan
+        sigma_det = np.linalg.det(self.cov) if self.cov is not None else np.nan
         model_info = (
             f"phi: {self.phi:.4f}\n"
             f"mu_0: {np.array2string(self.mu_0, precision=4)}\n"
