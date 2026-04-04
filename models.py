@@ -323,6 +323,7 @@ class GDA(Model):
         self.mu_0 = None
         self.mu_1 = None
         self.sigma = None
+        self.sigma_inv = None
   
     def calcluate_paramaters(X, y):
         m, n = X.shape
@@ -331,21 +332,24 @@ class GDA(Model):
         phi = np.mean(y)
         mu_0 = X0.mean(axis=0)
         mu_1 = X1.mean(axis=0)
+        
         sigma = (
         (X0 - mu_0).T @ (X0 - mu_0) +
         (X1 - mu_1).T @ (X1 - mu_1)
         ) / m
-        return phi, mu_0, mu_1, sigma
+        
+        sigma_inv = np.linalg.inv(sigma)
+        return phi, mu_0, mu_1, sigma, sigma_inv
     
     def fit(self, X, y,):
-        self.phi, self.mu_0, self.mu_1, self.sigma = self.calcluate_paramaters(X, y)
+        self.phi, self.mu_0, self.mu_1, self.sigma, self.sigma_inv = self.calcluate_paramaters(X, y)
         return self
     
     def predict(self, X, output="binary"):
         if self.phi is None:
             raise Exception("Model not trained yet")
         
-        sigma_inv = np.linalg.inv(self.sigma)
+        sigma_inv = self.sigma_inv
         theta_1 = sigma_inv @ (self.mu_1 - self.mu_0)
         theta_0 = (
             -0.5 * self.mu_1.T @ sigma_inv @ self.mu_1
