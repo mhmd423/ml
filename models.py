@@ -324,6 +324,8 @@ class GDA(Model):
         self.mu_1 = None
         self.sigma = None
         self.sigma_inv = None
+        self.theta = None
+        self.theta_0 = None
   
     def calcluate_paramaters(X, y):
         m, n = X.shape
@@ -343,23 +345,25 @@ class GDA(Model):
     
     def fit(self, X, y,):
         self.phi, self.mu_0, self.mu_1, self.sigma, self.sigma_inv = self.calcluate_paramaters(X, y)
+        
+        self.theta = self.sigma_inv @ (self.mu_1 - self.mu_0)
+        
+        self.theta_0 = (
+            -0.5 * self.mu_1.T @ self.sigma_inv @ self.mu_1
+            + 0.5 * self.mu_0.T @ self.sigma_inv @ self.mu_0
+            + np.log(self.phi / (1 - self.phi))
+        )
         return self
     
     def predict(self, X, output="binary"):
         if self.phi is None:
             raise Exception("Model not trained yet")
         
-        sigma_inv = self.sigma_inv
-        theta_1 = sigma_inv @ (self.mu_1 - self.mu_0)
-        theta_0 = (
-            -0.5 * self.mu_1.T @ sigma_inv @ self.mu_1
-            + 0.5 * self.mu_0.T @ sigma_inv @ self.mu_0
-            + np.log(self.phi / (1 - self.phi))
-        )
-        
+        z = X @ self.theta + self.theta_0
+
         if output == "probability":
             # Return the probability of the positive class
-            return 1 / (1 + np.exp(-(X @ theta_1 + theta_0)))
+            return 1 / (1 + np.exp(-z))
         else:
             # Return the binary predictions
-            return (X @ theta_1 + theta_0 >= 0).astype(int)
+            return (z >= 0).astype(int)
