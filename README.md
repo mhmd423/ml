@@ -5,6 +5,7 @@ This repository is a small machine learning practice space where classic models 
 ## What's here
 
 - `models.py`: base `Model` class plus custom `LogisticRegression` and `LinearRegression` implementations using NumPy.
+- `metrics.py`: reusable evaluation helpers such as classification accuracy.
 - `ps1.py`: a CS229-style logistic regression example that trains on `ds1_train.csv` and evaluates on `ds1_valid.csv`.
 - `lwlr.ipynb` and `ps1.ipynb`: notebook experiments.
 - `da.py`: helper script for downloading the housing dataset used in other ML exercises.
