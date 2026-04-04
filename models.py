@@ -8,7 +8,7 @@ class Model(ABC):
         self.mu = None
         self.sigma = None
         self._add_intercept = True
-        self._standarize = False
+        self._standardize = False
         self.method = None
         self.loss = []
 
@@ -16,14 +16,17 @@ class Model(ABC):
         intercept = np.ones((X.shape[0], 1))
         return np.hstack((intercept, X))
 
-    def standarize(self, X):
+    def standardize(self, X):
         return (X - self.mu) / (
             self.sigma + 1e-8
         )  # Add a small epsilon to avoid division by zero
 
+    def standarize(self, X):
+        return self.standardize(X)
+
     def preprocess(self, X):
-        if self._standarize:
-            X = self.standarize(X)
+        if self._standardize:
+            X = self.standardize(X)
         if self._add_intercept:
             X = self.add_intercept(X)
         return X
@@ -66,17 +69,21 @@ class LogisticRegression(Model):
         method="gradient_descent",
         learning_rate=0.01,
         num_iterations=1000,
-        standarize=False,
+        standardize=False,
+        standarize=None,
         eps=1e-5,
     ):
         if method not in self.METHODS:
             raise ValueError(f"Method must be one of {self.METHODS}")
 
+        if standarize is not None:
+            standardize = standarize
+
         # adding flags for use again in other methods
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
         self._add_intercept = fit_intercept
-        self._standarize = standarize
+        self._standardize = standardize
         self.method = method
         self.loss = []
 
@@ -236,7 +243,7 @@ class LogisticRegression(Model):
 
 
 class LinearRegression(Model):
-    METHODS = ["normal_equation", "gradient_descent",]  # one iteration of netwon method is equivalent to normal equation
+    METHODS = ["normal_equation", "gradient_descent"]  # one Newton step is equivalent to the normal equation
     def __init__(self):
         super().__init__()
         self.theta = None
@@ -245,12 +252,15 @@ class LinearRegression(Model):
         self,
         X,
         y,
-        standarize=False,
+        standardize=False,
+        standarize=None,
         add_intercept=True,
         method="normal_equation",
         ):
-        
-        self._standarize = standarize
+        if standarize is not None:
+            standardize = standarize
+
+        self._standardize = standardize
         self._add_intercept = add_intercept
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
@@ -329,7 +339,7 @@ class GDA(Model):
         self.theta_0 = None
   
     @staticmethod
-    def calcluate_paramaters(X, y):
+    def calculate_parameters(X, y):
         m, n = X.shape
         X0 = X[y == 0]
         X1 = X[y == 1]
@@ -344,16 +354,23 @@ class GDA(Model):
         
         cov_inv = np.linalg.inv(cov)
         return phi, mu_0, mu_1, cov, cov_inv
+
+    @staticmethod
+    def calcluate_paramaters(X, y):
+        return GDA.calculate_parameters(X, y)
     
-    def fit(self, X, y, standarize=False):
+    def fit(self, X, y, standardize=False, standarize=None):
         y = y.flatten()
-        self._standarize = standarize
+        if standarize is not None:
+            standardize = standarize
+
+        self._standardize = standardize
         self._add_intercept = False
         self.mu = X.mean(axis=0)
         self.sigma = X.std(axis=0)
         X_processed = self.preprocess(X)
         
-        self.phi, self.mu_0, self.mu_1, self.cov, self.cov_inv = self.calcluate_paramaters(X_processed, y)
+        self.phi, self.mu_0, self.mu_1, self.cov, self.cov_inv = self.calculate_parameters(X_processed, y)
         
         self.theta = self.cov_inv @ (self.mu_1 - self.mu_0)
         
