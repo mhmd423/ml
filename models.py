@@ -367,3 +367,82 @@ class GDA(Model):
         else:
             # Return the binary predictions
             return (z >= 0).astype(int)
+
+    def visualize(self, X, y_true, contour_levels=1):
+        m, n = X.shape
+        y_true = y_true.flatten()
+        if n != 2:
+            raise ValueError("Visualization only supported for 2D data")
+
+        x1_min, x1_max = X[:, 0].min(), X[:, 0].max()
+        x2_min, x2_max = X[:, 1].min(), X[:, 1].max()
+
+        xx1, xx2 = np.meshgrid(
+            np.linspace(x1_min, x1_max, 100), np.linspace(x2_min, x2_max, 100)
+        )
+        grid = np.c_[xx1.ravel(), xx2.ravel()]
+
+        z = self.predict(grid, output="probability").reshape(xx1.shape)
+
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+        # ------------------- plot 1 -------------------
+        ax1 = axes[0]
+        ax1.contourf(xx1, xx2, z, levels=contour_levels, cmap="RdBu", alpha=0.6)
+        ax1.contour(xx1, xx2, z, levels=[0.5], colors="k", linewidths=2)
+
+        x_true = X[y_true == 1]
+        ax1.scatter(
+            x_true[:, 0],
+            x_true[:, 1],
+            c="b",
+            label="class 1",
+            s=60,
+            marker="o",
+            zorder=3,
+        )
+
+        x_false = X[y_true == 0]
+        ax1.scatter(
+            x_false[:, 0],
+            x_false[:, 1],
+            c="r",
+            label="class 0",
+            s=60,
+            marker="x",
+            zorder=3,
+        )
+
+        ax1.set_title("Decision Boundary", fontsize=13)
+        ax1.legend(loc="upper right")
+        ax1.grid(True, linestyle="--", alpha=0.4)
+
+        # -------------------- plot 2 -------------------
+        ax2 = axes[1]
+        ax2.axis("off")
+        sigma_det = np.linalg.det(self.sigma) if self.sigma is not None else np.nan
+        model_info = (
+            f"phi: {self.phi:.4f}\n"
+            f"mu_0: {np.array2string(self.mu_0, precision=4)}\n"
+            f"mu_1: {np.array2string(self.mu_1, precision=4)}\n"
+            f"det(sigma): {sigma_det:.6f}\n"
+            f"theta_0: {self.theta_0:.4f}\n"
+            f"theta: {np.array2string(self.theta, precision=4)}"
+        )
+        ax2.text(
+            0.02,
+            0.98,
+            model_info,
+            transform=ax2.transAxes,
+            fontsize=11,
+            va="top",
+            ha="left",
+            family="monospace",
+            bbox=dict(facecolor="#f5f5f5", edgecolor="#dddddd"),
+        )
+        ax2.set_title("Model Parameters", fontsize=13)
+
+        plt.suptitle("Gaussian Discriminant Analysis", fontsize=15, fontweight="bold")
+        plt.tight_layout()
+
+        return fig
