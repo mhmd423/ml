@@ -24,6 +24,12 @@ Then run:
 python ps1.py
 ```
 
+To run the test suite:
+
+```bash
+python -m unittest discover -s tests
+```
+
 This will:
 
 - load the PS1 training and validation datasets
