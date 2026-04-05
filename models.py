@@ -21,9 +21,6 @@ class Model(ABC):
             self.sigma + 1e-8
         )  # Add a small epsilon to avoid division by zero
 
-    def standarize(self, X):
-        return self.standardize(X)
-
     def preprocess(self, X):
         if self._standardize:
             X = self.standardize(X)
@@ -70,14 +67,10 @@ class LogisticRegression(Model):
         learning_rate=0.01,
         num_iterations=1000,
         standardize=False,
-        standarize=None,
         eps=1e-5,
     ):
         if method not in self.METHODS:
             raise ValueError(f"Method must be one of {self.METHODS}")
-
-        if standarize is not None:
-            standardize = standarize
 
         # adding flags for use again in other methods
         self.mu = X.mean(axis=0)
@@ -253,13 +246,9 @@ class LinearRegression(Model):
         X,
         y,
         standardize=False,
-        standarize=None,
         add_intercept=True,
         method="normal_equation",
         ):
-        if standarize is not None:
-            standardize = standarize
-
         self._standardize = standardize
         self._add_intercept = add_intercept
         self.mu = X.mean(axis=0)
@@ -359,10 +348,8 @@ class GDA(Model):
     def calcluate_paramaters(X, y):
         return GDA.calculate_parameters(X, y)
     
-    def fit(self, X, y, standardize=False, standarize=None):
+    def fit(self, X, y, standardize=False):
         y = y.flatten()
-        if standarize is not None:
-            standardize = standarize
 
         self._standardize = standardize
         self._add_intercept = False
@@ -482,5 +469,72 @@ class PoissonRegression(Model):
         super().__init__()
         self.theta = None
         self.lambda_ = None
+        
+    @staticmethod
+    def poisson_loss(hyp, y_true):
+        eps = 1e-12
+        hyp = np.clip(hyp, eps, None)  # Avoid log(0)
+        return np.mean(hyp - y_true * np.log(hyp))
+    
+    def fit(
+        self,
+        X,
+        y,
+        fit_intercept=True,
+        method="newton_method",
+        learning_rate=0.01,
+        num_iterations=1000,
+        standardize=False,
+        eps=1e-5,
+    ):
+        if method not in self.METHODS:
+            raise ValueError(f"Method must be one of {self.METHODS}")
+
+        self.mu = X.mean(axis=0)
+        self.sigma = X.std(axis=0)
+        self._add_intercept = fit_intercept
+        self._standardize = standardize
+        self.method = method
+        self.loss = []
+
+        X_processed = self.preprocess(X)
+
+        y = y.reshape(-1, 1)  # Ensure y is a column vector
+        if np.any(y < 0):
+            raise ValueError("Poisson regression requires non-negative targets")
+        if not np.all(np.isfinite(y)):
+            raise ValueError("Targets contain NaN or infinite values")
+        m, n = X_processed.shape
+
+        self.theta = np.zeros((n, 1))
+        ridge = 1e-8 * np.eye(n)
+
+        if method == "gradient_descent":
+            for _ in range(num_iterations):
+                z = np.dot(X_processed, self.theta)
+                z = np.clip(z, -30, 30)  # Keep exp(z) numerically stable
+                hyp = np.exp(z)
+                gradient = np.dot(X_processed.T, (hyp - y)) / m
+                self.theta -= learning_rate * gradient
+                self.loss.append(self.poisson_loss(hyp, y))
+
+                if np.linalg.norm(gradient) < eps:
+                    break
+
+        elif method == "newton_method":
+            for _ in range(num_iterations):
+                z = np.dot(X_processed, self.theta)
+                z = np.clip(z, -30, 30)  # Keep exp(z) numerically stable
+                hyp = np.exp(z)
+                gradient = np.dot(X_processed.T, (hyp - y)) / m
+                H = np.dot(X_processed.T, X_processed * hyp) / m + ridge
+                self.theta -= np.linalg.solve(H, gradient)
+                self.loss.append(self.poisson_loss(hyp, y))
+
+                if np.linalg.norm(gradient) < eps:
+                    break
+
+        self.lambda_ = np.exp(np.clip(X_processed @ self.theta, -30, 30))
+        return self
 
     
