@@ -474,3 +474,10 @@ class GDA(Model):
         plt.tight_layout()
 
         return fig
+
+class PoissonRegression(Model):
+    def __init__(self):
+        super().__init__()
+        self.lamda = None
+        
+    
