@@ -550,3 +550,72 @@ class PoissonRegression(Model):
             )
 
         return np.exp(np.clip(X_processed @ self.theta, -30, 30))
+    
+    def visualize(self, X, y, more_info=False):
+        m, n = X.shape
+        y = y.flatten()
+        if n != 1:
+            raise ValueError("Visualization only supported for 1D data")
+
+        x_min, x_max = X[:, 0].min(), X[:, 0].max()
+        x_plot = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
+        y_plot = self.predict(x_plot)
+
+        if more_info:
+            width = 14
+            count = 2
+        else:
+            width = 7
+            count = 1
+        fig, axes = plt.subplots(1, count, figsize=(width, 6))
+
+        if count == 1:
+            axes = [axes]
+
+        # ------------------- plot 1 -------------------
+        ax1 = axes[0]
+        ax1.scatter(X, y, color="blue", label="Data Points", s=60, marker="o")
+        ax1.plot(x_plot, y_plot, color="red", label="Poisson Mean", linewidth=2)
+        ax1.set_title("Poisson Fit", fontsize=13)
+        ax1.set_xlabel("Feature")
+        ax1.set_ylabel("Count")
+        ax1.legend()
+        ax1.grid(True, linestyle="--", alpha=0.4)
+
+        if more_info:
+            # ------------------- plot 2 -------------------
+            ax2 = axes[1]
+            if self.loss:
+                ax2.plot(self.loss, color="steelblue", linewidth=2)
+                ax2.set_xlabel("Iteration")
+                ax2.set_ylabel("Poisson Loss")
+                ax2.set_title("Training Loss", fontsize=13)
+                ax2.grid(True, linestyle="--", alpha=0.4)
+                ax2.text(
+                    0.95,
+                    0.95,
+                    f"last-error: {self.loss[-1]}",
+                    transform=ax2.transAxes,
+                    fontsize=10,
+                    color="white",
+                    ha="right",
+                    va="top",
+                    bbox=dict(facecolor="black", alpha=1, edgecolor="none"),
+                )
+            else:
+                ax2.text(
+                    0.5,
+                    0.5,
+                    "No loss history",
+                    ha="center",
+                    va="center",
+                    transform=ax2.transAxes,
+                    fontsize=12,
+                    color="grey",
+                )
+
+        plt.suptitle(
+            f"Poisson Regression -- {self.method}", fontsize=15, fontweight="bold"
+        )
+        plt.tight_layout()
+        return fig
