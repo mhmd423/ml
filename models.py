@@ -149,6 +149,7 @@ class LogisticRegression(Model):
         X,
         y_true,
         contour_levels=1,
+        more_info=False,
     ):
         m, n = X.shape
         y_true = y_true.flatten()  # Ensure y_true is a 1D array
@@ -168,7 +169,16 @@ class LogisticRegression(Model):
             output="probability",
         ).reshape(xx1.shape)
 
-        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+        if more_info:
+            width = 14
+            count = 2
+        else:
+            width = 7
+            count = 1
+        fig, axes = plt.subplots(1, count, figsize=(width, 6))
+        
+        if count == 1:
+            axes = [axes]
 
         # ------------------- plot 1 -------------------
         ax1 = axes[0]
@@ -204,36 +214,39 @@ class LogisticRegression(Model):
         ax1.grid(True, linestyle="--", alpha=0.4)
 
         # -------------------- plot 2 -------------------
-        ax2 = axes[1]
-        if self.loss:
-            ax2.plot(self.loss, color="steelblue", linewidth=2)
-            ax2.set_xlabel("Iteration")
-            ax2.set_ylabel("Binary Cross-Entropy Loss")
-            ax2.set_title("Training Loss", fontsize=13)
-            ax2.grid(True, linestyle="--", alpha=0.4)
-        else:
-            ax2.text(
-                0.5,
-                0.5,
-                "No loss history",
-                ha="center",
-                va="center",
-                transform=ax2.transAxes,
-                fontsize=12,
-                color="grey",
-            )
+        if more_info:
+            ax2 = axes[1]
+            if self.loss:
+                ax2.plot(self.loss, color="steelblue", linewidth=2)
+                ax2.set_xlabel("Iteration")
+                ax2.set_ylabel("Binary Cross-Entropy Loss")
+                ax2.set_title("Training Loss", fontsize=13)
+                ax2.grid(True, linestyle="--", alpha=0.4)
+            else:
+                ax2.text(
+                    0.5,
+                    0.5,
+                    "No loss history",
+                    ha="center",
+                    va="center",
+                    transform=ax2.transAxes,
+                    fontsize=12,
+                    color="grey",
+                )
 
-        ax2.text(
-            0.95,
-            0.95,
-            f"last-error: {self.loss[-1]}",
-            transform=ax2.transAxes,
-            fontsize=10,
-            color="white",
-            ha="right",
-            va="top",
-            bbox=dict(facecolor="black", alpha=1, edgecolor="none"),
-        )
+            if self.loss:
+                ax2.text(
+                    0.95,
+                    0.95,
+                    f"last-error: {self.loss[-1]}",
+                    transform=ax2.transAxes,
+                    fontsize=10,
+                    color="white",
+                    ha="right",
+                    va="top",
+                    bbox=dict(facecolor="black", alpha=1, edgecolor="none"),
+                )
+
         plt.suptitle(
             f"Logistic Regression -- {self.method}", fontsize=15, fontweight="bold"
         )
@@ -305,7 +318,7 @@ class LinearRegression(Model):
 
         return X_processed @ self.theta
     
-    def visualize(self, X, y_true):
+    def visualize(self, X, y_true, more_info=False):
         m , n = X.shape
         y_true = y_true.flatten()  # Ensure y_true is a 1D array
         
@@ -316,14 +329,52 @@ class LinearRegression(Model):
         x_plot = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
         y_plot = self.predict(x_plot)
         
-        fig, ax = plt.subplots(figsize=(10, 6))
+        if more_info:
+            width = 14
+            count = 2
+        else:
+            width = 7
+            count = 1
+        fig, axes = plt.subplots(1, count, figsize=(width, 6))
+
+        if count == 1:
+            axes = [axes]
+
+        ax = axes[0]
         ax.scatter(X, y_true, color='blue', label='Data Points', s=60, marker='o')
         ax.plot(x_plot, y_plot, color='red', label='Regression Line', linewidth=2)
-        ax.set_title(f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold')
+        ax.set_title("Regression Fit", fontsize=13)
         ax.set_xlabel("Feature")
         ax.set_ylabel("Target")
         ax.legend()
         ax.grid(True, linestyle='--', alpha=0.4)
+
+        if more_info:
+            ax2 = axes[1]
+            ax2.axis("off")
+            info = (
+                f"method: {self.method}\n"
+                f"theta: {np.array2string(self.theta.flatten(), precision=6)}\n"
+                f"standardize: {self._standardize}\n"
+                f"intercept: {self._add_intercept}"
+            )
+            ax2.text(
+                0.02,
+                0.98,
+                info,
+                transform=ax2.transAxes,
+                fontsize=11,
+                va="top",
+                ha="left",
+                family="monospace",
+                bbox=dict(facecolor="#f5f5f5", edgecolor="#dddddd"),
+            )
+            ax2.set_title("Model Parameters", fontsize=13)
+
+        plt.suptitle(
+            f"Linear Regression -- {self.method}", fontsize=15, fontweight='bold'
+        )
+        plt.tight_layout()
         
         return fig 
         
@@ -396,7 +447,7 @@ class GDA(Model):
             # Return the binary predictions
             return (z >= 0).astype(int)
 
-    def visualize(self, X, y_true, contour_levels=1):
+    def visualize(self, X, y_true, contour_levels=1, more_info=False):
         m, n = X.shape
         y_true = y_true.flatten()
         if n != 2:
@@ -412,7 +463,16 @@ class GDA(Model):
 
         z = self.predict(grid, output="probability").reshape(xx1.shape)
 
-        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+        if more_info:
+            width = 14
+            count = 2
+        else:
+            width = 7
+            count = 1
+        fig, axes = plt.subplots(1, count, figsize=(width, 6))
+
+        if count == 1:
+            axes = [axes]
 
         # ------------------- plot 1 -------------------
         ax1 = axes[0]
@@ -445,30 +505,31 @@ class GDA(Model):
         ax1.legend(loc="upper right")
         ax1.grid(True, linestyle="--", alpha=0.4)
 
-        # -------------------- plot 2 -------------------
-        ax2 = axes[1]
-        ax2.axis("off")
-        sigma_det = np.linalg.det(self.cov) if self.cov is not None else np.nan
-        model_info = (
-            f"phi: {self.phi:.4f}\n"
-            f"mu_0: {np.array2string(self.mu_0, precision=4)}\n"
-            f"mu_1: {np.array2string(self.mu_1, precision=4)}\n"
-            f"det(sigma): {sigma_det:.6f}\n"
-            f"theta_0: {self.theta_0:.4f}\n"
-            f"theta: {np.array2string(self.theta, precision=4)}"
-        )
-        ax2.text(
-            0.02,
-            0.98,
-            model_info,
-            transform=ax2.transAxes,
-            fontsize=11,
-            va="top",
-            ha="left",
-            family="monospace",
-            bbox=dict(facecolor="#f5f5f5", edgecolor="#dddddd"),
-        )
-        ax2.set_title("Model Parameters", fontsize=13)
+        if more_info:
+            # -------------------- plot 2 -------------------
+            ax2 = axes[1]
+            ax2.axis("off")
+            sigma_det = np.linalg.det(self.cov) if self.cov is not None else np.nan
+            model_info = (
+                f"phi: {self.phi:.4f}\n"
+                f"mu_0: {np.array2string(self.mu_0, precision=4)}\n"
+                f"mu_1: {np.array2string(self.mu_1, precision=4)}\n"
+                f"det(sigma): {sigma_det:.6f}\n"
+                f"theta_0: {self.theta_0:.4f}\n"
+                f"theta: {np.array2string(self.theta, precision=4)}"
+            )
+            ax2.text(
+                0.02,
+                0.98,
+                model_info,
+                transform=ax2.transAxes,
+                fontsize=11,
+                va="top",
+                ha="left",
+                family="monospace",
+                bbox=dict(facecolor="#f5f5f5", edgecolor="#dddddd"),
+            )
+            ax2.set_title("Model Parameters", fontsize=13)
 
         plt.suptitle("Gaussian Discriminant Analysis", fontsize=15, fontweight="bold")
         plt.tight_layout()
