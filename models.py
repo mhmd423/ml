@@ -476,8 +476,11 @@ class GDA(Model):
         return fig
 
 class PoissonRegression(Model):
+    METHODS = ["gradient_descent", "newton_method"]
+
     def __init__(self):
         super().__init__()
-        self.lamda = None
-        
+        self.theta = None
+        self.lambda_ = None
+
     
