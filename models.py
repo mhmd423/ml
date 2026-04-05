@@ -537,4 +537,16 @@ class PoissonRegression(Model):
         self.lambda_ = np.exp(np.clip(X_processed @ self.theta, -30, 30))
         return self
 
-    
+    def predict(self, X):
+        if self.theta is None:
+            raise Exception("Model not trained yet")
+
+        X_processed = self.preprocess(X)
+
+        m, n = X_processed.shape
+        if self.theta.shape[0] != n:
+            raise ValueError(
+                f"Expected input with {self.theta.shape[0]} features, got {n}"
+            )
+
+        return np.exp(np.clip(X_processed @ self.theta, -30, 30))
