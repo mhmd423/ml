@@ -4,7 +4,7 @@ This repository is a small machine learning practice space where classic models 
 
 ## What's here
 
-- `models.py`: base `Model` class plus custom `LogisticRegression` and `LinearRegression` implementations using NumPy.
+- `models/`: in-repo Python package containing the base `Model` class and separate modules for `LogisticRegression`, `LinearRegression`, `GDA`, and `PoissonRegression`.
 - `metrics.py`: reusable evaluation helpers such as classification accuracy.
 - `ps1.py`: a CS229-style logistic regression example that trains on `ds1_train.csv` and evaluates on `ds1_valid.csv`.
 - `lwlr.ipynb` and `ps1.ipynb`: notebook experiments.
@@ -18,6 +18,12 @@ Create or activate a Python environment with the packages used in the repo:
 pip install numpy pandas matplotlib
 ```
 
+If you want to install the package from this repo itself:
+
+```bash
+pip install -e .
+```
+
 Then run:
 
 ```bash
@@ -27,7 +33,7 @@ python ps1.py
 To run the test suite:
 
 ```bash
-python -m unittest discover -s tests
+python -m pytest -q
 ```
 
 This will:
