@@ -16,8 +16,7 @@ venv/
 data/
 datasets/
 
-# Models
-models/
+# Model artifacts
 *.pt
 *.pth
 *.h5
