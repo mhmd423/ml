@@ -1,6 +1,6 @@
 import numpy as np
 
-from metrics import accuracy_score
+from src.metrics import accuracy_score
 
 
 def test_accuracy_score_flattens_inputs():

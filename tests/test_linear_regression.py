@@ -1,6 +1,6 @@
 import numpy as np
 
-from models.linear_regression import LinearRegression
+from src.models.linear_regression import LinearRegression
 
 
 def test_fits_line_with_normal_equation():

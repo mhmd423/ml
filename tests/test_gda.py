@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from models.gda import GDA
+from src.models.gda import GDA
 
 
 def test_calculate_parameters_returns_expected_shapes(gda_data):

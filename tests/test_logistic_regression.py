@@ -1,6 +1,6 @@
 import numpy as np
 
-from models.logistic_regression import LogisticRegression
+from src.models.logistic_regression import LogisticRegression
 
 
 def test_predicts_training_data_with_newton_method(logistic_data):

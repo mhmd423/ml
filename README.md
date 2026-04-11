@@ -4,11 +4,12 @@ This repository is a small machine learning practice space where classic models 
 
 ## What's here
 
-- `models/`: in-repo Python package containing the base `Model` class and separate modules for `LogisticRegression`, `LinearRegression`, `GDA`, and `PoissonRegression`.
-- `metrics.py`: reusable evaluation helpers such as classification accuracy.
-- `ps1.py`: a CS229-style logistic regression example that trains on `ds1_train.csv` and evaluates on `ds1_valid.csv`.
-- `lwlr.ipynb` and `ps1.ipynb`: notebook experiments.
-- `da.py`: helper script for downloading the housing dataset used in other ML exercises.
+- `src/models/`: in-repo Python package containing the base `Model` class and separate modules for `LogisticRegression`, `LinearRegression`, `GDA`, and `PoissonRegression`.
+- `src/metrics/`: reusable evaluation helpers such as classification accuracy.
+- `src/utils.py`: shared data-loading utility functions.
+- `scripts/ps1.py`: a CS229-style logistic regression example.
+- `notebooks/`: notebook experiments such as `lwlr.ipynb` and `ps1.ipynb`.
+- `data/`: local datasets (`data/cs229-2018-autumn/`, `data/datasets/`).
 
 ## How to run
 
@@ -27,7 +28,7 @@ pip install -e .
 Then run:
 
 ```bash
-python ps1.py
+python scripts/ps1.py
 ```
 
 To run the test suite:
@@ -45,5 +46,5 @@ This will:
 
 ## Notes
 
-- The CS229 datasets live under `cs229-2018-autumn/`, which is ignored in git because it is treated as external course material.
+- The CS229 datasets live under `data/cs229-2018-autumn/`, which is ignored in git because it is treated as external course material.
 - Most of the work in this repo is educational and exploratory, so notebooks and scripts are both present.

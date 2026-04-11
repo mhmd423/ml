@@ -1,10 +1,10 @@
 from pathlib import Path
-from pandas import pd
+import pandas as pd
 
 
 def load_data(problem_number=1, subset_number=1, dataset_type="train", number_of_features=2):
     #parent of all the data 
-    DATA_DIR = Path("cs229-2018-autumn") / "problem-sets" / f"PS{problem_number}" / "data"
+    DATA_DIR = Path("data") / "cs229-2018-autumn" / "problem-sets" / f"PS{problem_number}" / "data"
     #file path of the dataset 
     file_path = DATA_DIR / f"ds{subset_number}_{dataset_type}.csv"
 

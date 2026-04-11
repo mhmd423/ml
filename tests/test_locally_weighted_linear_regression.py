@@ -1,6 +1,6 @@
 import numpy as np
 
-from models.locally_weighted_linear_regression import lw_LinearRegression
+from src.models.locally_weighted_linear_regression import lw_LinearRegression
 
 
 def test_predict_matches_training_targets_with_small_bandwidth():
