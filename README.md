@@ -13,19 +13,19 @@ This repository is a small machine learning practice space where classic models 
 
 ## How to run
 
-Create or activate a Python environment with the packages used in the repo:
-
-```bash
-pip install numpy pandas matplotlib
-```
-
-If you want to install the package from this repo itself:
+Create or activate a Python environment, then install the package:
 
 ```bash
 pip install -e .
 ```
 
-Then run:
+For development (tests), install dev extras:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Then run the PS1 example:
 
 ```bash
 python scripts/ps1.py
