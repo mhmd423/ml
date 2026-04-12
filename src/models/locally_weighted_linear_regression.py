@@ -4,7 +4,7 @@ import numpy as np
 from .base import Model
 
 
-class lw_LinearRegression(Model):
+class LocallyWeightedLinearRegression(Model):
     def __init__(self, tau=0.1, lamda=1e-5):
         super().__init__()
         self.theta = None
@@ -81,7 +81,7 @@ class lw_LinearRegression(Model):
             y_pred[i, 0] = (x_query @ theta).item()
 
         return y_pred
-    
+
     def visualize(self, X, y):
         if self.X_train is None or self.y_train is None:
             raise Exception("Model not trained yet")
@@ -97,11 +97,17 @@ class lw_LinearRegression(Model):
         y_vis = self.predict(x_vis)
 
         plt.figure(figsize=(8, 6))
-        plt.scatter(X, y, color='blue', label='Training Data')
-        plt.plot(x_vis, y_vis, color='red', label='LWLR Fit')
-        plt.title(f'Locally Weighted Linear Regression -- τ={self.tau}, λ={self.lamda}')
-        plt.xlabel('Feature')
-        plt.ylabel('Target')
+        plt.scatter(X, y, color="blue", label="Training Data")
+        plt.plot(x_vis, y_vis, color="red", label="LWLR Fit")
+        plt.title(
+            f"Locally Weighted Linear Regression -- tau={self.tau}, lambda={self.lamda}"
+        )
+        plt.xlabel("Feature")
+        plt.ylabel("Target")
         plt.legend()
         plt.grid()
         plt.show()
+
+
+# Backward-compatible alias.
+lw_LinearRegression = LocallyWeightedLinearRegression
